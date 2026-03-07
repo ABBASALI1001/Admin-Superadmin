@@ -1,0 +1,504 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
+/* :root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --accent-blue: #3b82f6;
+  --accent-red: #ef4444;
+  --accent-green: #22c55e;
+  --accent-purple: #818cf8;
+  --accent-yellow: #eab308;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+} */
+
+:root {
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+
+  --accent-blue: #1e3a8a;
+  --accent-blue-soft: #e0e7ff;
+
+  --text-primary: #020617;
+  --text-secondary: #475569;
+
+  --border-color: #e5e7eb;
+
+  --accent-red: #dc2626; /* ADD THIS */
+  --accent-green: #16a34a; /* optional if needed */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Outfit", sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+.modern-table-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  /* Prevent double scrollbars */
+  position: relative;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent),
+    radial-gradient(circle at bottom left, rgba(239, 68, 68, 0.1), transparent);
+}
+
+.dashboard-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  background: rgb(9, 3, 90);
+  backdrop-filter: blur(16px);
+  padding: 0.75rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-section h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.logo-section span {
+  color: var(--accent-blue);
+}
+
+.date-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+  margin-right: 2rem;
+}
+
+.full-date {
+  font-size: 1rem;
+  font-weight: 600;
+  color: whitesmoke;
+}
+
+.day-name {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.main-grid {
+  display: grid;
+  min-width: fit-content;
+}
+
+/* Headers */
+.grid-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* Higher than cells */
+  background: var(--bg-secondary) !important;
+  padding: 1rem;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
+  text-align: center;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  color: black !important;
+  /* Force visibility */
+  min-height: 80px;
+}
+
+.grid-header.date-col {
+  left: 0;
+  z-index: 110;
+  /* Highest z-index for the corner */
+  background: var(--bg-primary) !important;
+}
+
+.grid-header.employee-name {
+  color: black !important;
+  min-width: 220px;
+  background-color: var(--bg-secondary) !important;
+  /* Ensure solid background */
+}
+
+.employee-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.grid-header.employee-name:hover .employee-actions {
+  opacity: 1;
+}
+
+.action-icon {
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-secondary);
+}
+
+.action-icon:hover {
+  color: white;
+}
+
+.action-icon.delete:hover {
+  background: var(--accent-red);
+}
+
+.employee-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  background: var(--accent-blue-soft);
+  color: black;
+}
+
+/* Rows */
+.grid-cell {
+  padding: 1rem;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.grid-cell:not(.date-label):not(.ac-row) {
+  cursor: pointer;
+}
+
+.grid-cell:hover:not(.date-label):not(.ac-row) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cell-edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(59, 130, 246, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.grid-cell:hover .cell-edit-overlay {
+  opacity: 2;
+}
+
+.grid-cell.date-label {
+  position: sticky;
+  left: 0;
+  z-index: 45;
+  background-color: var(--bg-primary) !important;
+  /* Ensure solid background */
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  border-right: 2px solid var(--border-color);
+}
+
+.grid-cell.ac-row {
+  background: rgba(148, 163, 184, 0.1);
+  min-height: 50px;
+  font-weight: 600;
+  color: var(--accent-blue);
+}
+
+/* Status colors */
+.cell-red {
+  background: rgb(235, 199, 199) !important;
+  border-left: 4px solid rgb(125, 1, 1);
+}
+
+.cell-green {
+  background: rgb(193, 229, 193) !important;
+  border-left: 4px solid rgb(2, 108, 2);
+}
+
+.cell-blue {
+  background: rgb(188, 188, 226) !important;
+  border-left: 4px solid var(--accent-blue);
+}
+
+.cell-gray {
+  background: rgba(148, 163, 184, 0.15) !important;
+  border-left: 4px solid var(--text-secondary);
+}
+
+.role-text {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.value-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.empty-cell {
+  opacity: 0.3;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 450px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(15, 23, 42, 0.5);
+  color: black;
+  outline: none;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--accent-blue);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.btn-danger {
+  background: var(--accent-red);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--text-secondary);
+  color: white;
+  border: 1px solid var(--border-color);
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Warnings */
+.warning-box {
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid var(--accent-yellow);
+  color: var(--accent-yellow);
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* .grid-header.employee-name {
+  min-width: 220px;
+  color: white !important;
+  background-color: var(--bg-secondary) !important;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+} */
+
+/* NEW: Sticky employee header cells (top row) */
+.grid-header.employee-name {
+  position: sticky !important;
+  top: 0 !important;
+  left: 100px !important; /* Date column width */
+  z-index: 101 !important;
+  background-color: var(--bg-secondary) !important;
+  border-right: 1px solid var(--border-color) !important;
+  border-bottom: 2px solid var(--border-color) !important;
+  min-width: 220px !important;
+}
+
+/* NEW: Sticky employee name cells (body rows) */
+.grid-cell:nth-child(2) {
+  /* This targets the first employee cell in each row */
+  position: sticky !important;
+  left: 100px !important;
+  z-index: 50 !important;
+  background-color: var(--bg-primary) !important;
+  border-right: 1px solid var(--border-color) !important;
+}
+
+/* Ensure ALL employee cells in body rows are sticky */
+.main-grid > div:nth-child(n + 2) .grid-cell:not(.date-label):first-of-type {
+  position: sticky !important;
+  left: 100px !important;
+  z-index: 50 !important;
+  background-color: var(--bg-primary) !important;
+  border-right: 1px solid var(--border-color) !important;
+}
+
+/* Copy button hover effect */
+.grid-cell:hover .copy-cell-btn {
+  opacity: 1 !important;
+}
+
+.copy-cell-btn:hover {
+  background: var(--accent-blue) !important;
+  color: white !important;
+}
+
+/* ===== NEW: Fix dropdown background to white ===== */
+.modal-content select,
+.form-group select {
+  background-color: white !important;
+  color: #333333 !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.modal-content select option,
+.form-group select option {
+  background-color: white !important;
+  color: #333333 !important;
+}
+
+.modal-content select option[value=""],
+.form-group select option[value=""] {
+  background-color: white !important;
+  color: #999999 !important;
+  font-style: italic;
+}
