@@ -155,6 +155,8 @@ export default function Login() {
 
         <div className="auth-footer">
           <span>© {new Date().getFullYear()} Secure Portal</span>
+          <span>Demo credentials for superAdmin superadmin@company.com super1234 </span>
+          <span>for admin admin@company.com admin1234</span>
         </div>
       </div>
     </div>
