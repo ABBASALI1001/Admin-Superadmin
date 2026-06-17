@@ -92,7 +92,6 @@ export default function Login() {
 
         <div className="auth-footer">
           <span>© Use superadmin@company.com super1234 </span>
-          </br>
           <span>admin cred admin@company.com  admin1234</span>
           
         </div>
