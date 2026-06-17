@@ -47,7 +47,33 @@ exports.saveAssignment = async (req, res) => {
       });
 
       // ============================================
-      // STEP 1: CHECK SAME DAY - OTHER EMPLOYEES
+      // STEP 1: BLUE IS FREE - SKIP ALL CHECKS FOR BLUE
+      // ============================================
+      if (status === "blue") {
+        // BLUE has no restrictions - save immediately
+        const updateData = {
+          role,
+          status,
+          value,
+          date: newDate,
+          monthYear,
+          day,
+          type,
+          employeeId,
+          restricted: false,
+        };
+
+        const updated = await Assignment.findOneAndUpdate(
+          { monthYear, day, type, employeeId },
+          updateData,
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
+        return res.json(updated);
+      }
+
+      // ============================================
+      // STEP 2: CHECK SAME DAY - OTHER EMPLOYEES (GREEN & RED ONLY)
       // ============================================
 
       const sameDayDifferentPerson = await Assignment.findOne({
@@ -62,82 +88,59 @@ exports.saveAssignment = async (req, res) => {
         const emp = await Employee.findById(sameDayDifferentPerson.employeeId);
         const name = emp ? emp.name : "another staff";
 
-        // RULE 1: BLUE is FREE - allow anyone to take BLUE on same day
-        if (status === "blue") {
-          console.log(`BLUE is FREE - anyone can take it anytime`);
-        }
-        // RULE 2: For GREEN or RED - block if someone already has it on same day
-        else {
-          return res.status(400).json({
-            message: `Already assigned to ${name} this week`
-          });
-        }
-      }
-
-      // ============================================
-      // STEP 2: CHECK SAME EMPLOYEE - 8-DAY RULE (GREEN & RED)
-      // ============================================
-
-      // BLUE is FREE - skip all checks for BLUE
-      if (status !== "blue") {
-
-        // Check if SAME PERSON has GREEN or RED in last 8 days (ANY color - GREEN or RED)
-        const recentAnyColorSelf = await Assignment.findOne({
-          role,
-          type: "DATE",
-          employeeId,
-          status: { $in: ["green", "red"] }, // Check for GREEN or RED
-          date: { $gte: startDate, $lte: endDate },
-          _id: { $ne: existingToday?._id }
-        }).sort({ date: -1 });
-
-        if (recentAnyColorSelf) {
-          const diffDays = Math.floor(
-            (endDate - new Date(recentAnyColorSelf.date)) /
-            (1000 * 60 * 60 * 24)
-          );
-          const daysLeft = 8 - diffDays;
-
-          const emp = await Employee.findById(employeeId);
-          const name = emp ? emp.name : "this user";
-
-          return res.status(400).json({
-            message: `Already assigned to ${name} this week`
-          });
-        }
-
-        // ============================================
-        // STEP 3: CHECK DIFFERENT EMPLOYEE - 8-DAY RULE (GREEN & RED)
-        // ============================================
-
-        // Check if ANY OTHER EMPLOYEE has GREEN or RED in last 8 days
-        const recentAnyColorOther = await Assignment.findOne({
-          role,
-          type: "DATE",
-          status: { $in: ["green", "red"] }, // Check for GREEN or RED
-          date: { $gte: startDate, $lte: endDate },
-          employeeId: { $ne: employeeId },
-          _id: { $ne: existingToday?._id }
+        return res.status(400).json({
+          message: `Already assigned to ${name} this week`
         });
-
-        if (recentAnyColorOther) {
-          const diffDays = Math.floor(
-            (endDate - new Date(recentAnyColorOther.date)) /
-            (1000 * 60 * 60 * 24)
-          );
-          const daysLeft = 8 - diffDays;
-
-          const emp = await Employee.findById(recentAnyColorOther.employeeId);
-          const name = emp ? emp.name : "another staff";
-
-          return res.status(400).json({
-            message: `Already assigned to ${name} this week`
-          });
-        }
       }
 
       // ============================================
-      // STEP 4: SAVE THE ASSIGNMENT
+      // STEP 3: CHECK SAME EMPLOYEE - 8-DAY RULE (GREEN & RED)
+      // ============================================
+
+      // Check if SAME PERSON has GREEN or RED in last 8 days
+      const recentAnyColorSelf = await Assignment.findOne({
+        role,
+        type: "DATE",
+        employeeId,
+        status: { $in: ["green", "red"] },
+        date: { $gte: startDate, $lte: endDate },
+        _id: { $ne: existingToday?._id }
+      }).sort({ date: -1 });
+
+      if (recentAnyColorSelf) {
+        const emp = await Employee.findById(employeeId);
+        const name = emp ? emp.name : "this user";
+
+        return res.status(400).json({
+          message: `Already assigned to ${name} this week`
+        });
+      }
+
+      // ============================================
+      // STEP 4: CHECK DIFFERENT EMPLOYEE - 8-DAY RULE (GREEN & RED)
+      // ============================================
+
+      // Check if ANY OTHER EMPLOYEE has GREEN or RED in last 8 days
+      const recentAnyColorOther = await Assignment.findOne({
+        role,
+        type: "DATE",
+        status: { $in: ["green", "red"] },
+        date: { $gte: startDate, $lte: endDate },
+        employeeId: { $ne: employeeId },
+        _id: { $ne: existingToday?._id }
+      });
+
+      if (recentAnyColorOther) {
+        const emp = await Employee.findById(recentAnyColorOther.employeeId);
+        const name = emp ? emp.name : "another staff";
+
+        return res.status(400).json({
+          message: `Already assigned to ${name} this week`
+        });
+      }
+
+      // ============================================
+      // STEP 5: SAVE THE ASSIGNMENT (GREEN & RED)
       // ============================================
 
       const updateData = {
