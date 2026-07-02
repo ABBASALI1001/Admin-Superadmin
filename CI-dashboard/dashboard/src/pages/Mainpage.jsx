@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Trash2, Save, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // ✅ ADD THIS
 import Navbar from "./Navbar";
 import DateAndEmployee from "./DateAndEmployee";
 import RoleData from "./RoleData";
@@ -11,6 +12,8 @@ import AddStaffModal from "./AddStaffModal";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Mainpage() {
+    const navigate = useNavigate(); // ✅ ADD THIS
+
   const [employees, setEmployees] = useState([]);
   const [roles, setRoles] = useState([]);
   const [scheduleData, setScheduleData] = useState([]);
@@ -52,6 +55,29 @@ function Mainpage() {
     "November",
     "December",
   ];
+
+
+  // ✅ ADD THIS - Authentication check on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userStr = localStorage.getItem("user");
+    
+    if (!token || !userStr) {
+      // No token or user found, redirect to login
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userStr);
+      setCurrentUser(user);
+    } catch (err) {
+      console.error("Error parsing user:", err);
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  
 
   // Fetch current user from localStorage on component mount
   useEffect(() => {
