@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { X, Trash2, Save, AlertTriangle } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // ✅ ADD THIS
 import Navbar from "./Navbar";
 import DateAndEmployee from "./DateAndEmployee";
 import RoleData from "./RoleData";
@@ -12,8 +11,6 @@ import AddStaffModal from "./AddStaffModal";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Mainpage() {
-    const navigate = useNavigate(); // ✅ ADD THIS
-
   const [employees, setEmployees] = useState([]);
   const [roles, setRoles] = useState([]);
   const [scheduleData, setScheduleData] = useState([]);
@@ -55,29 +52,6 @@ function Mainpage() {
     "November",
     "December",
   ];
-
-
-  // ✅ ADD THIS - Authentication check on component mount
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
-    
-    if (!token || !userStr) {
-      // No token or user found, redirect to login
-      navigate("/login");
-      return;
-    }
-    
-    try {
-      const user = JSON.parse(userStr);
-      setCurrentUser(user);
-    } catch (err) {
-      console.error("Error parsing user:", err);
-      navigate("/login");
-    }
-  }, [navigate]);
-
-  
 
   // Fetch current user from localStorage on component mount
   useEffect(() => {
@@ -173,6 +147,38 @@ function Mainpage() {
   const filteredEmployees = employees.filter((emp) =>
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  // --- NEW: Get roles blocked for current user (GREEN/BLUE in last 8 days) ---
+  const getBlockedRolesForCurrentUser = () => {
+    if (!currentUser || !scheduleData.length) return [];
+
+    const eightDaysAgo = new Date();
+    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+    eightDaysAgo.setHours(0, 0, 0, 0);
+
+    const blockedRolesSet = new Set();
+
+    scheduleData.forEach((row) => {
+      if (row.type === "DATE") {
+        const rowDate = new Date(selectedYear, selectedMonth, row.date);
+        if (rowDate >= eightDaysAgo) {
+          Object.entries(row.cells).forEach(([empId, cell]) => {
+            if (
+              empId === currentUser._id &&
+              cell &&
+              (cell.status === "green" || cell.status === "blue")
+            ) {
+              if (cell.role) {
+                blockedRolesSet.add(cell.role);
+              }
+            }
+          });
+        }
+      }
+    });
+
+    return Array.from(blockedRolesSet);
+  };
 
   // --- Open Cell Modal (for DATE cells only) ---
   const openEditCell = (rowIndex, empId) => {
@@ -465,6 +471,9 @@ function Mainpage() {
     }
   };
 
+  // Get blocked roles for current user
+  const blockedRoles = getBlockedRolesForCurrentUser();
+
   return (
     <div className="modern-table-container">
       <Navbar
@@ -517,7 +526,7 @@ function Mainpage() {
         </main>
       </div>
 
-      {/* Edit Cell Modal (for DATE cells) */}
+      {/* Edit Cell Modal (for DATE cells) - UPDATED with filtered roles */}
       {isEditModalOpen && editingCell && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -535,7 +544,7 @@ function Mainpage() {
               />
             </div>
 
-            {/* NEW: Error message inside modal */}
+            {/* Error message inside modal */}
             {modalError && (
               <div
                 style={{
@@ -570,12 +579,28 @@ function Mainpage() {
                 }}
               >
                 <option value="">-- None --</option>
-                {roles.map((r) => (
-                  <option key={r._id} value={r.name}>
-                    {r.name}
-                  </option>
-                ))}
+                {/* Filter out blocked roles for this user */}
+                {roles
+                  .filter((role) => !blockedRoles.includes(role.name))
+                  .map((r) => (
+                    <option key={r._id} value={r.name}>
+                      {r.name}
+                    </option>
+                  ))}
               </select>
+              {/* Show message if some roles are hidden */}
+              {blockedRoles.length > 0 && (
+                <small
+                  style={{
+                    color: "#ef4444",
+                    display: "block",
+                    marginTop: "0.5rem",
+                  }}
+                >
+                  Some roles are temporarily unavailable due to your active
+                  GREEN/BLUE assignments.
+                </small>
+              )}
             </div>
             <div className="form-group">
               <label>Status</label>
@@ -679,7 +704,13 @@ function Mainpage() {
       )}
 
       {/* Add Staff Modal */}
-      {isModalOpen && <AddStaffModal onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && (
+        <AddStaffModal
+          onClose={() => setIsModalOpen(false)}
+          blockedRoles={blockedRoles}
+          currentUserId={currentUser?._id}
+        />
+      )}
     </div>
   );
 }
