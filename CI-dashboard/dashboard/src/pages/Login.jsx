@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -18,18 +17,23 @@ export default function Login() {
     try {
       const res = await axios.post(`${API_URL}/auth/login`, form);
 
-      const { role } = res.data;
+      const { role, token, user } = res.data; // ✅ Make sure backend sends these
 
-      // store auth state
-      localStorage.setItem("isLoggedIn", "true");
+      // ✅ Store authentication properly
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("userRole", role);
+      localStorage.setItem("isLoggedIn", "true");
 
+      // Redirect based on role
       if (role === "superadmin") {
         navigate("/dashboard");
       } else if (role === "admin") {
         navigate("/read");
       } else {
         alert("Unauthorized user");
+        // Clear storage if unauthorized
+        localStorage.clear();
       }
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
@@ -91,9 +95,8 @@ export default function Login() {
         </form>
 
         <div className="auth-footer">
-          <span>© Use superadmin@company.com super1234  </span>
-          <span> and admin cred admin@company.com  admin1234</span>
-          
+          <span>© Use superadmin@company.com super1234</span>
+          <span> and admin cred admin@company.com admin1234</span>
         </div>
       </div>
     </div>
